@@ -1,17 +1,25 @@
-# __author__ = 'godq'
+__author__ = 'godq'
 
 
 class Config:
-    BASE_URL = "127.0.0.1"
-    CELERY_APP_NAME = "dagflow"
-    CELERY_CONFIGS = {
-        "CELERY_BROKER_URL": "redis://@{}:6379/0".format(BASE_URL),
-        "CELERY_RESULT_BACKEND": "redis://@{}:6379/0".format(BASE_URL),
-        "CELERY_TASK_SERIALIZER": 'json',
-        "CELERY_RESULT_SERIALIZER": 'json',
-        "CELERY_ACCEPT_CONTENT": ['json'],
-        "CELERY_TIMEZONE": 'Asia/Shanghai',
+    dag_repo_class = "dagflow.dag_repos.mongodb_dag_repo.MongodbDagRepo"
+    # Executor = "dagflow.executors.celery_executor.CeleryExecutor"
+    executor_class = "dagflow.executors.celery_executor.SequentialExecutor"
+
+    base_url = "10.241.3.229"
+    celery_app_name = "dagflow"
+    celery_configs = {
+        "broker_url": "redis://@{}:6379/0".format(base_url),
+        "result_backend": "redis://@{}:6379/0".format(base_url),
+        "task_serializer": 'json',
+        "result_serializer": 'json',
+        "accept_content": ['json'],
+        "timezone": 'Asia/Shanghai',
     }
-    DAG_REPO = "dagflow.dag_repos.redis_dag_repo.RedisDagRepo"
-    EXECUTOR = "dagflow.executors.celery_executor.CeleryExecutor"
+
+    redis_url = "redis://@{}:6379/0".format(base_url)
+    repo_mongodb_url = {
+        "url": "mongodb://{}:27017/".format(base_url),
+        "db_name": "dagflow"}
+
 

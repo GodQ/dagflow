@@ -1,4 +1,5 @@
-# __author__ = 'godq'
+__author__ = 'godq'
+from dagflow.plugin_registry import get_plugin
 
 
 class BaseExecutor:
@@ -26,3 +27,7 @@ class BaseExecutor:
 
     def result(self):
         raise NotImplemented()
+
+    @classmethod
+    def get_step_func(cls, name):
+        return get_plugin(name)

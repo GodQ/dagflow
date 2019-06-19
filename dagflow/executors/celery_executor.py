@@ -1,4 +1,4 @@
-# __author__ = 'godq'
+__author__ = 'godq'
 from celery import Celery
 from celery import states as celery_states
 import logging
@@ -8,7 +8,7 @@ import subprocess
 import time
 
 from dagflow.executors.base_executor import BaseExecutor
-from dagflow.config import Config as configuration
+from dagflow.config import Config
 
 logger = logging.getLogger('celery-executor')
 
@@ -17,19 +17,16 @@ To start the celery worker, run the command:
 dagflow worker
 '''
 
-celery_configuration = configuration.CELERY_CONFIGS
-
 
 class CeleryConfigClass:
-    def __int__(self, dict_config):
+    def __init__(self, dict_config):
         assert isinstance(dict_config, dict)
         for k, v in dict_config.items():
             setattr(self, k, v)
 
 
-app = Celery(
-    configuration.CELERY_APP_NAME,
-    config_source=CeleryConfigClass(celery_configuration))
+app = Celery(Config.celery_app_name)
+app.config_from_object(CeleryConfigClass(Config.celery_configs))
 
 
 class PythonFuncTask(app.Task):
@@ -56,14 +53,14 @@ def execute_command(command_to_exec):
 @app.task(name='workflow.common_workflow', bind=True,
           base=PythonFuncTask)
 def common_celery_task(self, func_name, args):
-    func = None
+    func = BaseExecutor.get_step_func(func_name)
     ret = func(args)
     return ret
 
 
 class CeleryExecutor(BaseExecutor):
     def __init__(self, **kwargs):
-        super(CeleryExecutor).__init__(**kwargs)
+        super(CeleryExecutor, self).__init__(**kwargs)
         self.celery_async_result = None
 
     def start(self):
@@ -86,7 +83,7 @@ class CeleryExecutor(BaseExecutor):
             return
 
         while task.state not in celery_states.READY_STATES:
-            time.sleep(5)
+            time.sleep(2)
         logger.info("Celery Task finished, id:{}, status:{}".format(task.id, task.state))
 
     def result(self):
