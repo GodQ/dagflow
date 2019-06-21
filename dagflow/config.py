@@ -8,8 +8,8 @@ logging.config.dictConfig(LoggingConfig)
 
 class Config:
     dag_repo_class = "dagflow.dag_repos.mongodb_dag_repo.MongodbDagRepo"
-    executor_class = "dagflow.executors.celery_executor.CeleryExecutor"
-    # executor_class = "dagflow.executors.sequential_executor.SequentialExecutor"
+    # executor_class = "dagflow.executors.celery_executor.CeleryExecutor"
+    executor_class = "dagflow.executors.sequential_executor.SequentialExecutor"
 
     base_url = "10.241.0.146"
     celery_app_name = "dagflow"

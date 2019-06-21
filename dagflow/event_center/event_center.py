@@ -39,8 +39,8 @@ def on_message(channel, method_frame, header_frame, event_body):
         if isinstance(event_body, str):
             event_body = json.loads(event_body)
 
-        logger.info("now: {}".format(time.time()))
-        logger.info('method_frame.delivery_tag: {}'.format(method_frame.delivery_tag))
+        # logger.info("now: {}".format(time.time()))
+        # logger.info('method_frame.delivery_tag: {}'.format(method_frame.delivery_tag))
         logger.info('body: {}'.format(event_body))
 
         operation = event_body.get("operation", None)
@@ -49,24 +49,29 @@ def on_message(channel, method_frame, header_frame, event_body):
         step_name = event_body.get("step_name", None)
         step_status = event_body.get("status", None)
 
+        logger.info("Step {} of dag run <{}>:<{}> {}".format(
+            step_name, dag_name, dag_run_id, step_status
+        ))
+
         # record this event to repo
         dag_repo.add_dag_run_event(dag_name, dag_run_id, event_body)
-        logger.info(event_body)
 
         if operation == EventOperation.FINISH_STEP and step_name:
             step = Dag(dag_name).fetch_step_info(step_name)
             if step.get("async_flag", False) is True:
-                logger.info("Step {} of dag run {}:{} finished, but is async, "
-                            "will do nothing and wait for continuous event")
+                logger.info("Step {} of dag run <{}>:<{}> finished, but is async, "
+                            "will do nothing and wait for continuous event".format(
+                    step_name, dag_name, dag_run_id
+                ))
                 return
             if step_status == StepStatus.Failed:
-                logger.error("Step {} of dag run {}:{} failed, downstream steps will not be triggered".format(
+                logger.error("Step {} of dag run <{}>:<{}> failed, downstream steps will not be triggered".format(
                     step_name, dag_name, dag_run_id
                 ))
                 dag_repo.mark_dag_run_status(dag_name, dag_run_id, status=StepStatus.Failed)
                 return
             if step.get("status", None) == StepStatus.Failed:
-                logger.error("dag run {}:{} has failed, step {} {}, downstream steps will not be triggered".format(
+                logger.error("dag run <{}>:<{}> has failed, step {} {}, downstream steps will not be triggered".format(
                     dag_name, dag_run_id, step_name, step_status
                 ))
                 return
@@ -77,12 +82,12 @@ def on_message(channel, method_frame, header_frame, event_body):
         if status == RequestFilterStatus.PASS:
             if operation == EventOperation.START_FLOW:
                 run_id, steps_to_do = start_flow(dag_name=dag_name, dag_run_id=dag_run_id)
-                logger.info("New dag run {} created for dag {}, steps_to_run: {}".format(
+                logger.info("New dag run id <{}> created for dag <{}>, steps_to_run: {}".format(
                     dag_run_id, dag_name, steps_to_do))
 
             elif operation in [EventOperation.FINISH_STEP, EventOperation.CONTINUE_STEP]:
                 steps_to_do = continue_flow(dag_name=dag_name, dag_run_id=dag_run_id, current_event=event_body)
-                logger.info("Existent dag run {} of dag {}, steps_to_run: {}".format(
+                logger.info("Existent dag run <{}> of dag <{}>, steps_to_run: {}".format(
                     dag_run_id, dag_name, steps_to_do))
         elif status == RequestFilterStatus.DELAY:
             mq_broker.send_delayed_msg(event_body, delay_seconds=30)

@@ -58,8 +58,8 @@ class CeleryExecutor(BaseExecutor):
             task_obj = common_celery_task.s(self.dag_name, self.dag_run_id, self.step_name, self.task_func_name, self.args)
             countdown = random.uniform(0.1, 2.0)
             self.celery_async_result = task_obj.apply_async(countdown=countdown)
-            logger.info("New Celery Task Created for func {}, id: {}".
-                        format(self.task_func_name, self.celery_async_result.id))
+            logger.info("New Celery Task Created for func {} of dag run <{}>:<{}> step {}, task id: {}".format(
+                self.task_func_name, self.dag_name, self.dag_run_id, self.step_name, self.celery_async_result.id))
 
     def __join__(self):
         # if not async, should wait for task finish
