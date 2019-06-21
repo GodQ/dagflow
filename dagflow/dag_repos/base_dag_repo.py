@@ -17,13 +17,19 @@ class BaseDagRepo:
     def find_step_def(self, dag_name, step_name):
         raise NotImplemented
 
-    def add_dag_run(self, dag_name, start_time):
+    def add_dag_run(self, dag_name, dag_run_id=None):
         raise NotImplemented
 
     def find_dag_runs(self, dag_name):
         raise NotImplemented
 
-    def add_dag_run_event(self, dag_name, run_id, status):
+    def find_dag_run(self, dag_name, dag_run_id):
+        raise NotImplemented
+
+    def mark_dag_run_status(self, dag_name, dag_run_id, status):
+        raise NotImplemented
+
+    def add_dag_run_event(self, dag_name, dag_run_id, event):
         raise NotImplemented
 
     def find_dag_run_events(self, dag_name, run_id):

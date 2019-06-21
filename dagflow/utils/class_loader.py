@@ -1,5 +1,13 @@
 __author__ = 'godq'
 import importlib
+import sys
+import os
+
+root_dir = os.path.dirname(os.path.dirname(__file__))
+sys.path.append(root_dir)
+sys.path.append(os.path.join(root_dir, "executors"))
+sys.path.append(os.path.join(root_dir, "dag_repos"))
+sys.path.append(os.path.join(root_dir, "plugins"))
 
 
 class ClassLoader:
@@ -7,13 +15,12 @@ class ClassLoader:
     def load(class_path):
         try:
             class_obj = importlib.import_module(class_path)
-        except ModuleNotFoundError:
+        except:
             t = class_path.split('.')
-            module_path = '.'.join(t[:-1])
-            print(t, module_path)
+            # module_path = '.'.join(t[:-1])
+            module_path = t[-2]
             module_obj = importlib.import_module(module_path)
             class_obj = getattr(module_obj, t[-1])
-        print(class_obj)
         return class_obj
 
 

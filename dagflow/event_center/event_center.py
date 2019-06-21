@@ -1,0 +1,98 @@
+import time
+import json
+import logging
+import logging.config
+import sys
+import os
+sys.path.append(os.path.dirname(__file__))
+
+from base_request_filter import RequestFilter, RequestFilterStatus, auto_load_filter
+from dagflow.flow_operation import start_flow, continue_flow
+from dagflow.dag import Dag
+from dagflow.loader import get_DagRepo_Object, get_MQ_Broker_Object
+from dagflow.step import StepStatus
+from dagflow.event import EventOperation
+
+
+logger = logging.getLogger('dagflow')
+auto_load_filter()
+dag_repo = get_DagRepo_Object()
+mq_broker = get_MQ_Broker_Object()
+
+"""
+event fields:
+             dag_name: ...
+             run_id: 111
+             step_name: ...
+             operation: start_flow or finish_step or continue_flow
+             time: current_time
+             status: step.StepStatus
+             message: ...
+             result: return of this step
+"""
+
+
+def on_message(channel, method_frame, header_frame, event_body):
+    try:
+        if isinstance(event_body, bytes):
+            event_body = event_body.decode()
+        if isinstance(event_body, str):
+            event_body = json.loads(event_body)
+
+        logger.info("now: {}".format(time.time()))
+        logger.info('method_frame.delivery_tag: {}'.format(method_frame.delivery_tag))
+        logger.info('body: {}'.format(event_body))
+
+        operation = event_body.get("operation", None)
+        dag_name = event_body.get("dag_name", None)
+        dag_run_id = event_body.get("dag_run_id", None)
+        step_name = event_body.get("step_name", None)
+        step_status = event_body.get("status", None)
+
+        # record this event to repo
+        dag_repo.add_dag_run_event(dag_name, dag_run_id, event_body)
+        logger.info(event_body)
+
+        if operation == EventOperation.FINISH_STEP and step_name:
+            step = Dag(dag_name).fetch_step_info(step_name)
+            if step.get("async_flag", False) is True:
+                logger.info("Step {} of dag run {}:{} finished, but is async, "
+                            "will do nothing and wait for continuous event")
+                return
+            if step_status == StepStatus.Failed:
+                logger.error("Step {} of dag run {}:{} failed, downstream steps will not be triggered".format(
+                    step_name, dag_name, dag_run_id
+                ))
+                dag_repo.mark_dag_run_status(dag_name, dag_run_id, status=StepStatus.Failed)
+                return
+            if step.get("status", None) == StepStatus.Failed:
+                logger.error("dag run {}:{} has failed, step {} {}, downstream steps will not be triggered".format(
+                    dag_name, dag_run_id, step_name, step_status
+                ))
+                return
+
+        status, msg = RequestFilter.run_filter(event_body)
+        logger.warning("Event Request Filter Result: {}".format(RequestFilterStatus.to_str(status)))
+
+        if status == RequestFilterStatus.PASS:
+            if operation == EventOperation.START_FLOW:
+                run_id, steps_to_do = start_flow(dag_name=dag_name, dag_run_id=dag_run_id)
+                logger.info("New dag run {} created for dag {}, steps_to_run: {}".format(
+                    dag_run_id, dag_name, steps_to_do))
+
+            elif operation in [EventOperation.FINISH_STEP, EventOperation.CONTINUE_STEP]:
+                steps_to_do = continue_flow(dag_name=dag_name, dag_run_id=dag_run_id, current_event=event_body)
+                logger.info("Existent dag run {} of dag {}, steps_to_run: {}".format(
+                    dag_run_id, dag_name, steps_to_do))
+        elif status == RequestFilterStatus.DELAY:
+            mq_broker.send_delayed_msg(event_body, delay_seconds=30)
+            logger.warning("Request will be re-checked in 30s, {}".format(event_body))
+        elif status == RequestFilterStatus.FORBID:
+            logger.error("Request is rejected, \n"
+                           "Request: {} \n"
+                           "Error Info: {}".format(event_body, msg))
+    finally:
+        channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+
+
+mq_broker.run_listener(on_message=on_message)

@@ -6,7 +6,7 @@ import os
 import subprocess
 import time
 
-from dagflow.executors.base_executor import BaseExecutor
+from dagflow.executors.base_executor import BaseExecutor, task_func_run
 from dagflow.config import Config
 
 logger = logging.getLogger('sequential-executor')
@@ -19,41 +19,23 @@ class CeleryConfigClass:
             setattr(self, k, v)
 
 
-def execute_command(command_to_exec):
-    logger.info("Executing command in Celery: %s", command_to_exec)
-    env = os.environ.copy()
-    try:
-        subprocess.check_call(command_to_exec, stderr=subprocess.STDOUT,
-                              close_fds=True, env=env)
-    except subprocess.CalledProcessError as e:
-        logger.exception('execute_command encountered a CalledProcessError')
-        logger.error(e.output)
-
-        raise Exception('Celery command failed')
-
-
-def common_task(func_name, args):
-    func = BaseExecutor.get_step_func(func_name)
-    ret = func(args)
-    return ret
-
-
 class SequentialExecutor(BaseExecutor):
-    def __init__(self, **kwargs):
-        super(SequentialExecutor, self).__init__(**kwargs)
+    def __init__(self, kwargs):
+        super(SequentialExecutor, self).__init__(kwargs)
         self.func_result = None
 
-    def start(self):
+    def __start__(self):
         if self.command:
             pass
-        elif self.task_func:
-            ret = common_task(self.task_func, self.args)
-            self.func_result = ret
+        elif self.task_func_name:
+            print("run {} by SequentialExecutor".format(self.step_name))
+            ret = self.task_func_run()
+            self.func_result = ret if ret else "Finished"
 
-    def join(self):
-        logger.info("New Task Finished for func {}".format(self.task_func))
+    def __join__(self):
+        logger.info("New Task Finished for func {}".format(self.task_func_name))
 
-    def result(self):
+    def __result__(self):
         assert self.func_result
         return self.func_result
 

@@ -3,7 +3,7 @@ import sys
 import os
 import logging
 
-from dagflow.exceptions import PlugInHasExistent
+from dagflow.exceptions import PlugInHasExisted
 
 logger = logging.getLogger('plugin-registry')
 
@@ -25,7 +25,7 @@ def auto_load_tasks(task_dir=os.path.join(BASE_DIR, "plugins")):
                 plugin_conf = module.PLUGINS
                 for k, v in plugin_conf.items():
                     if k in PLUGINS:
-                        raise PlugInHasExistent("Plugin {}:{} has been existent!".format(module_name, k))
+                        raise PlugInHasExisted("Plugin {}:{} has been existent!".format(module_name, k))
                     PLUGINS[k] = v
                     logger.info("Load plugin {}:{}".format(module_name, k))
             except ImportError as e:

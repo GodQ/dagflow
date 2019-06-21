@@ -2,10 +2,14 @@ __author__ = 'godq'
 import logging
 import json
 import time
+from pymongo.errors import DuplicateKeyError
+from dagflow.exceptions import DagHasExisted
 
 from dagflow.dag_repos.base_dag_repo import BaseDagRepo
 from dagflow.utils.mongodb_operator import get_mongodb_client
 from dagflow.exceptions import DagNotFoundInRepo
+
+from dagflow.utils.cache_manager import CacheManager
 
 logger = logging.getLogger('dagflow')
 mongodb_client = get_mongodb_client()
@@ -44,7 +48,12 @@ class MongodbDagRepo(BaseDagRepo):
         with mongodb_client as my_mongodb_client:
             db = my_mongodb_client.db
             content['_id'] = dag_name
-            db.dag_def.insert_one(content)
+            try:
+                db.dag_def.insert_one(content)
+            except DuplicateKeyError as e:
+                msg = str(e)
+                raise DagHasExisted(msg)
+        CacheManager.delete_cache("dag_def_{}".format(dag_name))
 
     def update_dag(self, dag_name, content):
         assert isinstance(content, dict)
@@ -57,6 +66,7 @@ class MongodbDagRepo(BaseDagRepo):
                 replacement=content,
                 upsert=True
             )
+        CacheManager.delete_cache("dag_def_{}".format(dag_name))
 
     def delete_dag(self, dag_name, just_flag=False):
         if just_flag is False:
@@ -95,45 +105,73 @@ class MongodbDagRepo(BaseDagRepo):
             if step['name'] == step_name:
                 return step
 
-    def add_dag_run(self, dag_name, start_time):
+    def add_dag_run(self, dag_name, dag_run_id=None):
         dag_run = dict()
-        if not start_time:
-            start_time = time.time()
-        run_id = start_time
+        start_time = time.time()
+        if not dag_run_id:
+            dag_run_id = str(start_time)
+        else:
+            dag_run_id = str(dag_run_id)
         with mongodb_client as my_mongodb_client:
             db = my_mongodb_client.db
             dag_run['dag_name'] = dag_name
             dag_run['start_time'] = start_time
-            dag_run['run_id'] = run_id
+            dag_run['dag_run_id'] = dag_run_id
             db.dag_run.insert_one(dag_run)
-            return run_id
+            return dag_run_id
 
     def find_dag_runs(self, dag_name, max_count=5):
         dag_runs = list()
         with mongodb_client as my_mongodb_client:
             db = my_mongodb_client.db
             res = db.dag_run.find({"dag_name": dag_name})
-            for dag in res:
-                dag_runs.append(dag)
+            for run in res:
+                dag_runs.append(run)
                 if len(dag_runs) == max_count:
                     return dag_runs
             return dag_runs
 
-    def add_dag_run_event(self, dag_name, run_id, status):
-        assert isinstance(status, dict)
+    def find_dag_run(self, dag_name, dag_run_id):
+        dag_run_id = str(dag_run_id)
         with mongodb_client as my_mongodb_client:
             db = my_mongodb_client.db
-            status['dag_name'] = dag_name
-            status['run_id'] = run_id
-            if 'time' not in status or not status['time']:
-                status['time'] = time.time()
-            db.dag_run_event.insert_one(status)
+            res = db.dag_run.find({"dag_name": dag_name})
+            for run in res:
+                if run['dag_run_id'] == dag_run_id:
+                    return run
+            return None
 
-    def find_dag_run_events(self, dag_name, run_id):
+    def mark_dag_run_status(self, dag_name, dag_run_id, status):
+        dag_run_id = str(dag_run_id)
+        with mongodb_client as my_mongodb_client:
+            db = my_mongodb_client.db
+            filter_dict = {
+                "dag_name": dag_name,
+                "dag_run_id": dag_run_id
+            }
+            newvalues = {"$set": {"status": status}}
+            db.dag_run.update_one(
+                filter=filter_dict,
+                update=newvalues
+            )
+
+    def add_dag_run_event(self, dag_name, dag_run_id, event):
+        dag_run_id = str(dag_run_id)
+        assert isinstance(event, dict)
+        with mongodb_client as my_mongodb_client:
+            db = my_mongodb_client.db
+            event['dag_name'] = dag_name
+            event['run_id'] = dag_run_id
+            if 'time' not in event or not event['time']:
+                event['time'] = time.time()
+            db.dag_run_event.insert_one(event)
+
+    def find_dag_run_events(self, dag_name, dag_run_id):
+        dag_run_id = str(dag_run_id)
         dag_run_events = list()
         with mongodb_client as my_mongodb_client:
             db = my_mongodb_client.db
-            res = db.dag_run_event.find({"dag_name": dag_name, "run_id": run_id})
+            res = db.dag_run_event.find({"dag_name": dag_name, "dag_run_id": dag_run_id})
             for dag in res:
                 dag_run_events.append(dag)
             return dag_run_events

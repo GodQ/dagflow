@@ -1,9 +1,17 @@
 __author__ = 'godq'
 
 
-class PlugInHasExistent(Exception):
+class PlugInHasExisted(Exception):
     pass
 
 
 class DagNotFoundInRepo(Exception):
+    pass
+
+
+class StepFailed(Exception):
+    pass
+
+
+class DagHasExisted(Exception):
     pass

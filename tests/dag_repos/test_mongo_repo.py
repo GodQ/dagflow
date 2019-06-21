@@ -8,14 +8,16 @@ from dagflow.dag_repos.mongodb_dag_repo import MongodbDagRepo
 class MongodbRepoTest(unittest.TestCase):
     def test_dag_def(self):
         dag = {
-            "name": "test",
+            "name": "dag_def_test",
             "steps": [
                 {
                     "name": "step1",
                     "task_func": "hello_plugin1",
                     "args": {
                         "name": "hello world"
-                    }
+                    },
+                    "upstreams": [],
+                    "downstreams": ["step2"]
                 },
                 {
                     "name": "step2",

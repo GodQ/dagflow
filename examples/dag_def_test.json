@@ -1,0 +1,23 @@
+{
+  "name": "dag_def_test",
+  "steps": [
+    {
+      "name": "step1",
+      "task_func": "hello_plugin1",
+      "args": {
+        "name": "hello world"
+      },
+      "upstreams": [],
+      "downstreams": [
+        "step2"
+      ]
+    },
+    {
+      "name": "step2",
+      "task_func": "hello_plugin2",
+      "args": {
+        "name": "hello world"
+      }
+    }
+  ]
+}
