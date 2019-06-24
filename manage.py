@@ -36,12 +36,8 @@ class Manage:
         dag_name = dag.get("name")
         dag_repo.update_dag(dag_name=dag_name, content=dag)
 
-    def start_event_center(self, daemon="false"):
-        daemon = str(daemon).lower().strip()
-        if daemon == "true":
-
-        else:
-            start_event_center()
+    def start_event_center(self):
+        start_event_center()
 
 
 if __name__ == "__main__":
