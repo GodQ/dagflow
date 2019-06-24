@@ -6,6 +6,7 @@ import os
 import json
 
 from dagflow.loader import get_DagRepo_Object
+from dagflow.event_center.event_center import start_event_center
 
 dag_repo = get_DagRepo_Object()
 
@@ -34,6 +35,13 @@ class Manage:
         dag = self.__load_dag_def_file(dag_def_path)
         dag_name = dag.get("name")
         dag_repo.update_dag(dag_name=dag_name, content=dag)
+
+    def start_event_center(self, daemon="false"):
+        daemon = str(daemon).lower().strip()
+        if daemon == "true":
+
+        else:
+            start_event_center()
 
 
 if __name__ == "__main__":

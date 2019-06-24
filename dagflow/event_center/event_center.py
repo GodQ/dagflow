@@ -71,7 +71,7 @@ def on_message(channel, method_frame, header_frame, event_body):
                 return
         elif operation == EventOperation.Waiting_Event:
             logger.info("Step {} of dag run <{}>:<{}> finished, but is async, "
-                        "will do nothing and wait for continuous event".format(
+                        "will do nothing and wait for following event".format(
                 step_name, dag_name, dag_run_id
             ))
             dag = Dag(dag_name, dag_run_id, event_body)
@@ -102,4 +102,9 @@ def on_message(channel, method_frame, header_frame, event_body):
         channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
 
-mq_broker.run_listener(on_message=on_message)
+def start_event_center():
+    mq_broker.run_listener(on_message=on_message)
+
+
+if __name__ == "__main__":
+    start_event_center()

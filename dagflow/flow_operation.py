@@ -29,7 +29,7 @@ def start_flow(dag_name, dag_run_id=None):
 
 def continue_flow(dag_name, dag_run_id, current_event=None):
     dag = Dag(dag_name, dag_run_id, event=current_event)
-    steps_to_do = dag.fetch_steps_to_run(max_count=1)
+    steps_to_do = dag.fetch_steps_to_run(max_count=2)
     for step_name in steps_to_do:
         step = dag.fetch_step_info(step_name)
         task_func = step["task_func"]

@@ -22,7 +22,7 @@ LoggingConfig = {
             "formatter": "simple",
             # "stream": "ext://sys.stdout"
         },
-        "info_file_handler": {
+        "file_handler": {
             "class": "logging.FileHandler",
             "level": "INFO",
             "formatter": "simple",
@@ -32,12 +32,12 @@ LoggingConfig = {
     "loggers": {
         "dagflow": {
             "level": log_level,
-            "handlers": ["console"],
+            "handlers": ["console", "file_handler"],
             "propagate": False
         }
     },
     "root": {
         "level": log_level,
-        "handlers": ["console"]
+        "handlers": ["console", "file_handler"]
     }
 }

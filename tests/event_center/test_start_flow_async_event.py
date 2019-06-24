@@ -82,8 +82,8 @@ class StartFlowAsyncEventTest(unittest.TestCase):
         # mq_broker.send_msg(start_flow_event)
         send_start_flow_msg(dag_name, run_id)
 
-        print("wait 20s")
-        time.sleep(20)
+        print("wait 10s")
+        time.sleep(10)
         print("send step2 finish msg")
 
         # step2_finish_event = {
@@ -96,8 +96,8 @@ class StartFlowAsyncEventTest(unittest.TestCase):
         # mq_broker.send_msg(step2_finish_event)
         send_finish_step_msg(dag_name, run_id, step_name="step2")
 
-        print("wait 20s")
-        time.sleep(20)
+        print("wait 10s")
+        time.sleep(10)
         print("send step3 finish msg")
 
         # step3_finish_event = {
