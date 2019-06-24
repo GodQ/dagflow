@@ -8,9 +8,9 @@ mq_broker = get_MQ_Broker_Object()
 
 
 class EventOperation:
-    START_FLOW = "start_flow"
-    FINISH_STEP = "finish_step"
-    CONTINUE_STEP = "continue_flow"
+    Start_Flow = "start_flow"
+    Finish_Step = "finish_step"
+    Waiting_Event = "waiting_event"
 
 
 def add_event_to_repo(dag_name, run_id, event):

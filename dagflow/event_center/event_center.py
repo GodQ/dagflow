@@ -56,14 +56,8 @@ def on_message(channel, method_frame, header_frame, event_body):
         # record this event to repo
         dag_repo.add_dag_run_event(dag_name, dag_run_id, event_body)
 
-        if operation == EventOperation.FINISH_STEP and step_name:
+        if operation == EventOperation.Finish_Step:
             step = Dag(dag_name).fetch_step_info(step_name)
-            if step.get("async_flag", False) is True:
-                logger.info("Step {} of dag run <{}>:<{}> finished, but is async, "
-                            "will do nothing and wait for continuous event".format(
-                    step_name, dag_name, dag_run_id
-                ))
-                return
             if step_status == StepStatus.Failed:
                 logger.error("Step {} of dag run <{}>:<{}> failed, downstream steps will not be triggered".format(
                     step_name, dag_name, dag_run_id
@@ -75,17 +69,25 @@ def on_message(channel, method_frame, header_frame, event_body):
                     dag_name, dag_run_id, step_name, step_status
                 ))
                 return
+        elif operation == EventOperation.Waiting_Event:
+            logger.info("Step {} of dag run <{}>:<{}> finished, but is async, "
+                        "will do nothing and wait for continuous event".format(
+                step_name, dag_name, dag_run_id
+            ))
+            dag = Dag(dag_name, dag_run_id, event_body)
+            dag.update_step_status()
+            return
 
         status, msg = RequestFilter.run_filter(event_body)
         logger.warning("Event Request Filter Result: {}".format(RequestFilterStatus.to_str(status)))
 
         if status == RequestFilterStatus.PASS:
-            if operation == EventOperation.START_FLOW:
+            if operation == EventOperation.Start_Flow:
                 run_id, steps_to_do = start_flow(dag_name=dag_name, dag_run_id=dag_run_id)
                 logger.info("New dag run id <{}> created for dag <{}>, steps_to_run: {}".format(
                     dag_run_id, dag_name, steps_to_do))
 
-            elif operation in [EventOperation.FINISH_STEP, EventOperation.CONTINUE_STEP]:
+            elif operation in [EventOperation.Finish_Step]:
                 steps_to_do = continue_flow(dag_name=dag_name, dag_run_id=dag_run_id, current_event=event_body)
                 logger.info("Existent dag run <{}> of dag <{}>, steps_to_run: {}".format(
                     dag_run_id, dag_name, steps_to_do))

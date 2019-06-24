@@ -9,14 +9,17 @@ from dagflow.step import StepStatus
 from dagflow.event import EventOperation
 
 
-def task_func_run(dag_name, dag_run_id, step_name, func, args):
+def task_func_run(dag_name, dag_run_id, step_name, func, args, async_flag=False):
     if isinstance(func, str):
         func = BaseExecutor.get_step_func(func)
 
     event = dict()
     try:
         result = func(args)
-        event["status"] = StepStatus.Succeeded
+        if async_flag is True:
+            event["status"] = StepStatus.WaitingEvent
+        else:
+            event["status"] = StepStatus.Succeeded
         event['message'] = "Succeeded"
         event['result'] = result
     except Exception as e:
@@ -28,7 +31,10 @@ def task_func_run(dag_name, dag_run_id, step_name, func, args):
     event['dag_run_id'] = dag_run_id
     event['step_name'] = step_name
     event['time'] = time.time()
-    event['operation'] = EventOperation.FINISH_STEP
+    if async_flag is True:
+        event['operation'] = EventOperation.Waiting_Event
+    else:
+        event['operation'] = EventOperation.Finish_Step
     print(event)
     send_event_message(event)
 
@@ -42,13 +48,15 @@ class BaseExecutor:
         self.command = kwargs.get("command", None)
         self.task_func_name = kwargs.get("task_func", None)
         self.args = kwargs.get("args", None)
+        self.async_flag = kwargs.get("async_flag", False)
 
     def task_func_run(self):
         """
         this method call the common task_func_run
         """
+        print("async_flag: {}".format(self.async_flag))
         return task_func_run(self.dag_name, self.dag_run_id, self.step_name,
-                             func=self.task_func_name, args=self.args)
+                             func=self.task_func_name, args=self.args, async_flag=self.async_flag)
 
     def __start__(self):
         """

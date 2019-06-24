@@ -22,7 +22,10 @@ class Config:
         "timezone": 'Asia/Shanghai',
     }
 
+    # Redis for step dependency calculation and session storage
     redis_url = "redis://@{}:6379/0".format(base_url)
+
+    # MongoDB for persistent storage of dag/run/event
     repo_mongodb_url = {
         "url": "mongodb://{}:27017/".format(base_url),
         "db_name": "dagflow"}

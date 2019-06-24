@@ -34,7 +34,7 @@ Graph def:
 
 event fields:
              dag_name: ...
-             run_id: 111
+             dag_run_id: 111
              step_name: ...
              operation: start_flow or finish_step(default) or continue_flow
              time: current_time
@@ -79,6 +79,13 @@ class Dag:
         self.save_step_graph()
         self.dlock.unlock()
         return ret_steps
+
+    def update_step_status(self):
+        self.dlock.lock(expire_time=60 * 2, block=True)
+        self.load_current_step_graph()
+        self.update_step_graph(self.event)
+        self.save_step_graph()
+        self.dlock.unlock()
 
     def fetch_one_step_to_run(self):
         ret_steps = self.fetch_steps_to_run(max_count=1)
@@ -180,6 +187,8 @@ class Dag:
             elif status == StepStatus.Failed:
                 msg = json.dumps(event)
                 raise StepFailed(msg)
+            elif status == StepStatus.WaitingEvent:
+                self.steps[step_name]["status"] = StepStatus.WaitingEvent
 
     def select_ready_steps(self):
         ready_steps = list()
