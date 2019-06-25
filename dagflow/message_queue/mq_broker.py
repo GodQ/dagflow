@@ -11,7 +11,7 @@ class MQ_Broker:
         self.exchange = exchange
         self.exchange_type = exchange_type
         self.delay_queue = delay_queue
-        self.__channel = self.connect()
+        self.__connection, self.__channel = self.connect()
         self.init_broker_queue()
         if delay_queue:
             self.init_dl_queue()
@@ -22,12 +22,12 @@ class MQ_Broker:
         connection = pika.BlockingConnection(pika.URLParameters(url))
         channel = connection.channel()
         channel.basic_qos(prefetch_count=1)
-        return channel
+        return connection, channel
 
     @property
     def channel(self):
-        if not self.__channel:
-            self.__channel = self.connect()
+        if not self.__connection or self.__connection.is_closed:
+            self.__connection, self.__channel = self.connect()
         return self.__channel
 
     def init_dl_queue(self):

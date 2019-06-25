@@ -14,13 +14,16 @@ class BaseDagRepo:
     def find_dag(self, dag_name):
         raise NotImplemented
 
+    def list_dags(self, detail=False):
+        raise NotImplemented
+
     def find_step_def(self, dag_name, step_name):
         raise NotImplemented
 
     def add_dag_run(self, dag_name, dag_run_id=None):
         raise NotImplemented
 
-    def find_dag_runs(self, dag_name):
+    def list_dag_runs(self, dag_name):
         raise NotImplemented
 
     def find_dag_run(self, dag_name, dag_run_id):

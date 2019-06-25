@@ -1,0 +1,9 @@
+include *.yaml
+include LICENSE
+global-exclude *.pyc
+include setup.py
+include manage.py
+recursive-include docs *.md
+include README.md requirements.txt
+recursive-include tools
+recursive-include *.json

@@ -46,7 +46,7 @@ class MongodbRepoTest(unittest.TestCase):
         print(run_id1)
         run_id2 = repo.add_dag_run(dag_name, time.time())
         print(run_id2)
-        r = repo.find_dag_runs(dag_name)
+        r = repo.list_dag_runs(dag_name)
         print(r)
 
     def test_dag_run_event(self):

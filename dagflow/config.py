@@ -1,6 +1,7 @@
 __author__ = 'godq'
-
-
+import sys
+import os
+import importlib
 import logging.config
 from dagflow.configs.logging_config import LoggingConfig
 logging.config.dictConfig(LoggingConfig)
@@ -20,6 +21,7 @@ class Config:
         "result_serializer": 'json',
         "accept_content": ['json'],
         "timezone": 'Asia/Shanghai',
+        "worker_count": 2
     }
 
     # Redis for step dependency calculation and session storage
@@ -37,3 +39,13 @@ class Config:
     event_mq_delay_queue = 'dagflow-broker-delay-local'
 
 
+# if in user folder, use user's config replace default config
+cwd = os.path.abspath(os.getcwd())
+if os.path.isdir("configs") and os.path.isfile(os.path.join("configs", "dagflow_config.py")):
+    if cwd not in sys.path:
+        sys.path.append(cwd)
+    configs_dir = os.path.join(cwd, "configs")
+    if configs_dir not in sys.path:
+        sys.path.append(configs_dir)
+    user_config = importlib.import_module("dagflow_config")
+    Config = user_config.Config

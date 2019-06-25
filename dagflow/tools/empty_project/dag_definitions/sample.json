@@ -1,0 +1,57 @@
+{
+  "name": "dag_sample",
+  "steps": [
+    {
+      "name": "step1",
+      "task_func": "echo",
+      "args": {
+        "name": "hello world1"
+      },
+      "upstreams": [],
+      "downstreams": [
+        "step2",
+        "step3"
+      ]
+    },
+    {
+      "name": "step2",
+      "task_func": "echo",
+      "args": {
+        "name": "hello world2"
+      },
+      "upstreams": [],
+      "downstreams": [
+        "step4"
+      ]
+    },
+    {
+      "name": "step3",
+      "task_func": "echo",
+      "args": {
+        "name": "hello world3"
+      },
+      "upstreams": [],
+      "downstreams": [
+        "step4"
+      ]
+    },
+    {
+      "name": "step4",
+      "task_func": "echo",
+      "args": {
+        "name": "hello world4"
+      },
+      "upstreams": [],
+      "downstreams": []
+    },
+    {
+      "name": "step5",
+      "task_func": "echo",
+      "args": {
+        "name": "hello world5"
+      },
+      "upstreams": [],
+      "downstreams": []
+    }
+  ]
+}

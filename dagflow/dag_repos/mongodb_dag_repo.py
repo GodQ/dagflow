@@ -99,6 +99,22 @@ class MongodbDagRepo(BaseDagRepo):
                 return dag
             raise DagNotFoundInRepo("Dag {} not found in mongodb".format(dag_name))
 
+    def list_dags(self, detail=False):
+        dag_list = list()
+        with mongodb_client as my_mongodb_client:
+            db = my_mongodb_client.db
+            res = db.dag_def.find()
+            for dag in res:
+                if isinstance(dag, bytes):
+                    dag = dag.decode()
+                if isinstance(dag, str):
+                    dag = json.loads(dag)
+                if detail is False:
+                    dag_list.append(dag.get("name"))
+                else:
+                    dag_list.append(dag)
+        return dag_list
+
     def find_step_def(self, dag_name, step_name):
         dag = self.find_dag(dag_name)
         for step in dag['steps']:
@@ -120,7 +136,7 @@ class MongodbDagRepo(BaseDagRepo):
             db.dag_run.insert_one(dag_run)
             return dag_run_id
 
-    def find_dag_runs(self, dag_name, max_count=5):
+    def list_dag_runs(self, dag_name, max_count=20):
         dag_runs = list()
         with mongodb_client as my_mongodb_client:
             db = my_mongodb_client.db

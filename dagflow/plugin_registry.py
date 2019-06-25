@@ -13,10 +13,12 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PLUGINS = dict()
 
 
-def auto_load_tasks(task_dir=os.path.join(BASE_DIR, "plugins")):
-    sys.path.append(task_dir)
-    for filename in os.listdir(task_dir):
-        path = os.path.join(task_dir, filename)
+def auto_load_plugins(plugin_dir=os.path.join(BASE_DIR, "plugins")):
+    print(plugin_dir)
+    if plugin_dir not in sys.path:
+        sys.path.append(plugin_dir)
+    for filename in os.listdir(plugin_dir):
+        path = os.path.join(plugin_dir, filename)
         if os.path.isfile(path) and filename.endswith(".py") and \
                 filename != "__init__.py":
             module_name = filename.strip(".py")
@@ -33,9 +35,20 @@ def auto_load_tasks(task_dir=os.path.join(BASE_DIR, "plugins")):
     print()
 
 
-auto_load_tasks()
-
-
 def get_plugin(name):
-    return PLUGINS.get(name)
+    func = PLUGINS.get(name)
+    if not func:
+        load_plugins()
+        func = PLUGINS.get(name)
+    return func
 
+
+def load_plugins():
+    # auto load built-in plugins and user plugins
+    auto_load_plugins()
+    user_plugin_dir = os.environ.get("USER_PLUGINS_PATH", None)
+    if user_plugin_dir:
+        auto_load_plugins(user_plugin_dir)
+
+
+load_plugins()
