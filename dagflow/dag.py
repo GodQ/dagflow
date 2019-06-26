@@ -80,6 +80,16 @@ class Dag:
         self.dlock.unlock()
         return ret_steps
 
+    def specify_step_to_run(self, step_name):
+        self.dlock.lock(expire_time=60 * 2, block=True)
+        self.load_current_step_graph()
+        # self.update_step_graph(self.event)
+        ret_steps = [step_name]
+        self.mark_ready_steps(ret_steps)
+        self.save_step_graph()
+        self.dlock.unlock()
+        return ret_steps
+
     def update_step_status(self):
         self.dlock.lock(expire_time=60 * 2, block=True)
         self.load_current_step_graph()
@@ -139,12 +149,16 @@ class Dag:
             self.step_downstreams[step_name] = list()
 
         # calculate every up/down
+        error_handle_steps = list()
         for step in dag_steps:
             step_name = step['name']
             upstreams = step.get('upstreams', None)
             downstreams = step.get('downstreams', None)
+            error_handle_step = step.get("error_handle_step", None)
             step['scheduled'] = False
             self.steps[step_name] = step
+            if error_handle_step and error_handle_step not in error_handle_steps:
+                error_handle_steps.append(error_handle_step)
             if upstreams:
                 for s in upstreams:
                     self.step_upstreams[step_name].append(s)
@@ -153,6 +167,14 @@ class Dag:
                 for s in downstreams:
                     self.step_downstreams[step_name].append(s)
                     self.step_upstreams[s].append(step_name)
+
+        # if one step is only error handle step,
+        # should set its upstream list non-empty to prevent it being scheduled by select_ready_steps
+        # it can be selected only by specify_step_to_run
+        for step_name in error_handle_steps:
+            if len(self.step_upstreams[step_name]) == 0:
+                self.step_upstreams[step_name].append("")
+
 
     def load_dag_run_events(self):
         self.dag_run_events = dag_repo_obj.find_dag_run_events(self.dag_name, self.dag_run_id)
@@ -185,6 +207,7 @@ class Dag:
                     self.step_upstreams[s].remove(step_name)
                 del self.steps[step_name]
             elif status == StepStatus.Failed:
+                del event['_id']
                 msg = json.dumps(event)
                 raise StepFailed(msg)
             elif status == StepStatus.WaitingEvent:

@@ -48,6 +48,27 @@ def continue_flow(dag_name, dag_run_id, current_event=None):
     return steps_to_do
 
 
+def specify_step_to_run(dag_name, dag_run_id, step_name):
+    dag = Dag(dag_name, dag_run_id)
+    steps_to_do = dag.specify_step_to_run(step_name)
+    for step_name in steps_to_do:
+        step = dag.fetch_step_info(step_name)
+        task_func = step["task_func"]
+        args = step["args"]
+        async_flag = step.get("async_flag", False)
+        kwargs = {
+            "dag_name": dag_name,
+            "dag_run_id": dag_run_id,
+            "step_name": step_name,
+            "task_func": task_func,
+            "args": args,
+            "async_flag": async_flag,
+        }
+        executor = StepExecutor(kwargs)
+        executor.start()
+    return steps_to_do
+
+
 def send_start_flow_msg(dag_name, dag_run_id):
     step_finish_event = {
         "dag_name": dag_name,

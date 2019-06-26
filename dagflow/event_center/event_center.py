@@ -6,8 +6,8 @@ import sys
 import os
 sys.path.append(os.path.dirname(__file__))
 
-from base_request_filter import RequestFilter, RequestFilterStatus, auto_load_filter
-from dagflow.flow_operation import start_flow, continue_flow
+from dagflow.event_center.base_request_filter import RequestFilter, RequestFilterStatus, auto_load_filter
+from dagflow.flow_operation import start_flow, continue_flow, specify_step_to_run
 from dagflow.dag import Dag
 from dagflow.loader import get_DagRepo_Object, get_MQ_Broker_Object
 from dagflow.step import StepStatus
@@ -48,6 +48,9 @@ def on_message(channel, method_frame, header_frame, event_body):
         dag_run_id = event_body.get("dag_run_id", None)
         step_name = event_body.get("step_name", None)
         step_status = event_body.get("status", None)
+        error_handle_step = None
+        error_handle_flag = False
+        dag_run_info = dag_repo.find_dag_run(dag_name, dag_run_id)
 
         logger.info("Step {} of dag run <{}>:<{}> {}".format(
             step_name, dag_name, dag_run_id, step_status
@@ -58,13 +61,17 @@ def on_message(channel, method_frame, header_frame, event_body):
 
         if operation == EventOperation.Finish_Step:
             step = Dag(dag_name).fetch_step_info(step_name)
+            error_handle_step = step.get("error_handle_step", None)
             if step_status == StepStatus.Failed:
                 logger.error("Step {} of dag run <{}>:<{}> failed, downstream steps will not be triggered".format(
                     step_name, dag_name, dag_run_id
                 ))
                 dag_repo.mark_dag_run_status(dag_name, dag_run_id, status=StepStatus.Failed)
-                return
-            if step.get("status", None) == StepStatus.Failed:
+                if not error_handle_step:
+                    return
+                else:
+                    error_handle_flag = True
+            elif dag_run_info.get("status", None) == StepStatus.Failed:
                 logger.error("dag run <{}>:<{}> has failed, step {} {}, downstream steps will not be triggered".format(
                     dag_name, dag_run_id, step_name, step_status
                 ))
@@ -88,9 +95,16 @@ def on_message(channel, method_frame, header_frame, event_body):
                     dag_run_id, dag_name, steps_to_do))
 
             elif operation in [EventOperation.Finish_Step]:
-                steps_to_do = continue_flow(dag_name=dag_name, dag_run_id=dag_run_id, current_event=event_body)
-                logger.info("Existent dag run <{}> of dag <{}>, steps_to_run: {}".format(
-                    dag_run_id, dag_name, steps_to_do))
+                if error_handle_flag is False:
+                    steps_to_do = continue_flow(dag_name=dag_name, dag_run_id=dag_run_id, current_event=event_body)
+                    logger.info("Existent dag run <{}> of dag <{}>, steps_to_run: {}".format(
+                        dag_run_id, dag_name, steps_to_do))
+                else:
+                    specify_step_to_run(dag_name=dag_name, dag_run_id=dag_run_id,
+                                        step_name=error_handle_step)
+                    logger.info("Existent dag run <{}> of dag <{}>, run error handle step: {}".format(
+                        dag_run_id, dag_name, step_name))
+
         elif status == RequestFilterStatus.DELAY:
             mq_broker.send_delayed_msg(event_body, delay_seconds=30)
             logger.warning("Request will be re-checked in 30s, {}".format(event_body))
