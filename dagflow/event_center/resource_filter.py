@@ -1,4 +1,4 @@
-from .base_request_filter import RequestFilterStatus
+from dagflow.event_center.base_request_filter import RequestFilterStatus
 
 
 def check_resource(request):

@@ -50,6 +50,8 @@ class Manage:
         if os.path.isdir("plugins"):
             os.environ["USER_PLUGINS_PATH"] = os.path.join(cwd, "plugins")
 
+        sys.path.append(cwd)
+
         from dagflow.event_center.event_center import start_event_center
 
         start_event_center()
