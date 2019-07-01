@@ -35,6 +35,15 @@ def continue_flow(dag_name, dag_run_id, current_event=None):
         task_func = step["task_func"]
         args = step["args"]
         async_flag = step.get("async_flag", False)
+        if not args:
+            args = dict()
+        args.update({
+            "dag_name": dag_name,
+            "dag_run_id": dag_run_id,
+            "step_name": step_name,
+            "task_func": task_func,
+            "async_flag": async_flag,
+        })
         kwargs = {
             "dag_name": dag_name,
             "dag_run_id": dag_run_id,
