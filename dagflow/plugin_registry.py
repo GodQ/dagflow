@@ -33,7 +33,7 @@ def __load_plugin_dict(plugin_conf):
         if k in PLUGINS:
             raise PlugInHasExisted("Plugin {}:{} has been existent!".format(k, v))
         add_plugin(k, v)
-        logger.info("Load plugin {}:{}".format(k, v))
+        logger.info("Load plugin {}".format(k))
 
 
 def auto_load_plugins(plugin_dir=os.path.join(BASE_DIR, "plugins")):
@@ -68,7 +68,7 @@ def load_plugins():
     from dagflow.plugins.resource_filter import FILTERS as filter_list
     RequestFilter.add_filters(filter_list)
 
-    auto_load_plugins()
+    # auto_load_plugins()
     user_plugin_dir = os.environ.get("USER_PLUGINS_PATH", None)
     if user_plugin_dir:
         auto_load_plugins(user_plugin_dir)

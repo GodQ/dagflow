@@ -29,7 +29,7 @@ class RequestFilter:
             cls.filter_list.append(func)
             func_name = func.__name__
             module_name = func.__module__
-            logger.warning("load filter {} of module {}".format(func_name, module_name))
+            logger.warning("load filter {}.{}".format(module_name, func_name))
 
     @classmethod
     def add_filters(cls, filter_list):
