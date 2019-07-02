@@ -2,8 +2,18 @@ __author__ = 'godq'
 import os
 import sys
 
+from dagflow.flow_operation import send_start_flow_msg as sdk_send_start_flow_msg, \
+    send_finish_step_msg as sdk_send_finish_step_msg
 from dagflow.loader import get_DagRepo_Object
 dag_repo = get_DagRepo_Object()
+
+
+def send_finish_step_msg(dag_name, dag_run_id, step_name, status=None, message=None, result=None):
+    return sdk_send_finish_step_msg(dag_name, dag_run_id, step_name, status, message, result)
+
+
+def send_start_flow_msg(dag_name, dag_run_id):
+    return sdk_send_start_flow_msg(dag_name, dag_run_id)
 
 
 def register_dag(dag_def):

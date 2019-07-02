@@ -12,7 +12,6 @@ from dagflow.step import StepStatus
 
 dag_repo = get_DagRepo_Object()
 StepExecutor = get_StepExecutor_Class()
-mq_broker = get_MQ_Broker_Object()
 
 
 def start_flow(dag_name, dag_run_id=None):
@@ -90,6 +89,7 @@ def send_start_flow_msg(dag_name, dag_run_id):
         "time": time.time(),
     }
     print(step_finish_event)
+    mq_broker = get_MQ_Broker_Object()
     mq_broker.send_msg(step_finish_event)
 
 
@@ -107,4 +107,5 @@ def send_finish_step_msg(dag_name, dag_run_id, step_name, status=None, message=N
         "result": result,
     }
     print(step_finish_event)
+    mq_broker = get_MQ_Broker_Object()
     mq_broker.send_msg(step_finish_event)

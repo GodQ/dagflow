@@ -46,7 +46,7 @@ def auto_load_plugins(plugin_dir=os.path.join(BASE_DIR, "plugins")):
         path = os.path.join(plugin_dir, filename)
         if os.path.isfile(path) and filename.endswith(".py") and \
                 filename != "__init__.py":
-            module_name = filename.strip(".py")
+            module_name = filename[:-3]
             try:
                 print(module_name)
                 module = __import__(module_name)
