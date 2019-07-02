@@ -10,6 +10,7 @@ from dagflow.utils.mongodb_operator import get_mongodb_client
 from dagflow.exceptions import DagNotFoundInRepo
 
 from dagflow.utils.cache_manager import CacheManager
+from dagflow.step import StepStatus
 
 logger = logging.getLogger('dagflow')
 mongodb_client = get_mongodb_client()
@@ -135,6 +136,10 @@ class MongodbDagRepo(BaseDagRepo):
             dag_run['dag_run_id'] = dag_run_id
             db.dag_run.insert_one(dag_run)
             return dag_run_id
+
+    def stop_dag_run(self, dag_name, dag_run_id):
+        assert dag_name and dag_run_id
+        self.mark_dag_run_status(dag_name, dag_run_id, StepStatus.Stopped)
 
     def list_dag_runs(self, dag_name, max_count=20):
         dag_runs = list()

@@ -5,6 +5,7 @@ class StepStatus:
     Created = "Created"
     Succeeded = "Succeeded"
     Failed = "Failed"
+    Stopped = "Stopped"
     WaitingEvent = "WaitingEvent"
 
     finished_status = [Failed, Succeeded]

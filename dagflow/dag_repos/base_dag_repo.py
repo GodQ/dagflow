@@ -23,6 +23,9 @@ class BaseDagRepo:
     def add_dag_run(self, dag_name, dag_run_id=None):
         raise NotImplemented
 
+    def stop_dag_run(self, dag_name, dag_run_id):
+        raise NotImplemented
+
     def list_dag_runs(self, dag_name):
         raise NotImplemented
 

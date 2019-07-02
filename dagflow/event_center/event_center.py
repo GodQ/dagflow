@@ -15,7 +15,7 @@ from dagflow.event import EventOperation
 
 
 logger = logging.getLogger('dagflow')
-auto_load_filter()
+# auto_load_filter()
 dag_repo = get_DagRepo_Object()
 mq_broker = get_MQ_Broker_Object()
 
@@ -73,6 +73,11 @@ def on_message(channel, method_frame, header_frame, event_body):
                     error_handle_flag = True
             elif dag_run_info.get("status", None) == StepStatus.Failed:
                 logger.error("dag run <{}>:<{}> has failed, step {} {}, downstream steps will not be triggered".format(
+                    dag_name, dag_run_id, step_name, step_status
+                ))
+                return
+            elif dag_run_info.get("status", None) == StepStatus.Stopped:
+                logger.error("dag run <{}>:<{}> has been stopped, step {} {}, downstream steps will not be triggered".format(
                     dag_name, dag_run_id, step_name, step_status
                 ))
                 return

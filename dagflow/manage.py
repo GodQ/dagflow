@@ -7,6 +7,7 @@ import sys
 import json
 from pprint import pprint
 
+import dagflow.sdk as dagflow_sdk
 from dagflow.loader import get_DagRepo_Object
 dag_repo = get_DagRepo_Object()
 
@@ -28,14 +29,13 @@ class Manage:
 
     def register_dag(self, dag_def_path):
         dag = self.__load_dag_def_file(dag_def_path)
-        dag_name = dag.get("name")
-        dag_repo.add_dag(dag_name=dag_name, content=dag)
-        print("Dag {} created successfully by path {}".format(dag_name, dag_def_path))
+        dagflow_sdk.register_dag(dag)
+        print("Dag {} created successfully by path {}".format(dag['dag_name'], dag_def_path))
 
     def update_dag(self, dag_def_path):
         dag = self.__load_dag_def_file(dag_def_path)
         dag_name = dag.get("name")
-        dag_repo.update_dag(dag_name=dag_name, content=dag)
+        dagflow_sdk.update_dag(dag)
         print("Dag {} updated successfully by path {}".format(dag_name, dag_def_path))
 
     def init_project(self, dst_dir="dagflow_project"):
@@ -49,12 +49,9 @@ class Manage:
         cwd = os.path.abspath(os.getcwd())
         if os.path.isdir("plugins"):
             os.environ["USER_PLUGINS_PATH"] = os.path.join(cwd, "plugins")
-
         sys.path.append(cwd)
-
-        from dagflow.event_center.event_center import start_event_center
-
-        start_event_center()
+        sys.path.append(os.path.dirname(cwd))
+        dagflow_sdk.start_event_center()
 
     def start_worker(self, worker_count=None):
         from dagflow.utils.command import run_cmd
@@ -72,32 +69,29 @@ class Manage:
         print("Dagflow worker has started successfully")
 
     def run_dag(self, dag_name):
-        import time
-        from dagflow.flow_operation import send_start_flow_msg
-        dag_run_id = str(time.time())
-        send_start_flow_msg(dag_name, dag_run_id)
+        dag_run_id = dagflow_sdk.run_dag(dag_name)
         print("Dag {} started successfully with dag_run_id {}".format(dag_name, dag_run_id))
+
+    def stop_dag_run(self, dag_name, dag_run_id):
+        dagflow_sdk.stop_dag_run(dag_name, dag_run_id)
+        print("Dag {} stopped with dag_run_id {}".format(dag_name, dag_run_id))
 
     def list_dags(self, detail=False):
         from dagflow.loader import get_DagRepo_Object
         repo = get_DagRepo_Object()
         detail = str(detail).strip().lower()
         detail = True if detail == "true" else False
-        dag_list = repo.list_dags(detail=detail)
+        dag_list = dagflow_sdk.list_dags(detail)
         for dag in dag_list:
             pprint(dag)
 
     def list_dag_runs(self, dag_name):
-        from dagflow.loader import get_DagRepo_Object
-        repo = get_DagRepo_Object()
-        dag_run_list = repo.list_dag_runs(dag_name=dag_name)
+        dag_run_list = dagflow_sdk.list_dag_runs(dag_name)
         for dag in dag_run_list:
             pprint(dag)
 
     def list_dag_run_events(self, dag_name, dag_run_id):
-        from dagflow.loader import get_DagRepo_Object
-        repo = get_DagRepo_Object()
-        dag_run_events_list = repo.find_dag_run_events(dag_name=dag_name, dag_run_id=dag_run_id)
+        dag_run_events_list = dagflow_sdk.list_dag_run_events()
         for dag in dag_run_events_list:
             pprint(dag)
 

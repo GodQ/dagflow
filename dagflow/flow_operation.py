@@ -33,7 +33,7 @@ def continue_flow(dag_name, dag_run_id, current_event=None):
     for step_name in steps_to_do:
         step = dag.fetch_step_info(step_name)
         task_func = step["task_func"]
-        args = step["args"]
+        args = step.get("args", None)
         async_flag = step.get("async_flag", False)
         if not args:
             args = dict()
@@ -55,6 +55,10 @@ def continue_flow(dag_name, dag_run_id, current_event=None):
         executor = StepExecutor(kwargs)
         executor.start()
     return steps_to_do
+
+
+def stop_flow(dag_name, dag_run_id):
+    dag_repo.stop_dag_run(dag_name, dag_run_id)
 
 
 def specify_step_to_run(dag_name, dag_run_id, step_name):

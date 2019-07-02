@@ -27,6 +27,14 @@ class RequestFilter:
     def add_filter(cls, func):
         if func not in cls.filter_list:
             cls.filter_list.append(func)
+            func_name = func.__name__
+            module_name = func.__module__
+            logger.warning("load filter {} of module {}".format(func_name, module_name))
+
+    @classmethod
+    def add_filters(cls, filter_list):
+        for f in filter_list:
+            cls.add_filter(f)
 
     @classmethod
     def run_filter(cls, request):
