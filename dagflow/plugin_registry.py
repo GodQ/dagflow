@@ -16,8 +16,8 @@ PLUGINS = dict()
 def add_plugin(name, func):
     if name not in PLUGINS:
         PLUGINS[name] = func
-    else:
-        raise PlugInHasExisted("Plugin {}:{} has been existent!".format(k, v))
+    # else:
+    #     raise PlugInHasExisted("Plugin {}:{} has been existent!".format(k, v))
 
 
 def get_plugin(name):
@@ -30,8 +30,8 @@ def get_plugin(name):
 
 def __load_plugin_dict(plugin_conf):
     for k, v in plugin_conf.items():
-        if k in PLUGINS:
-            raise PlugInHasExisted("Plugin {}:{} has been existent!".format(k, v))
+        # if k in PLUGINS:
+        #     raise PlugInHasExisted("Plugin {}:{} has been existent!".format(k, v))
         add_plugin(k, v)
         logger.info("Load plugin {}".format(k))
 

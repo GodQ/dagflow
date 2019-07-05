@@ -6,7 +6,7 @@ from dagflow.loader import get_StepExecutor_Class
 from dagflow.loader import get_MQ_Broker_Object
 from dagflow.event import EventOperation
 from dagflow.dag import Dag
-from dagflow.utils.session_manager import SessionManager
+# from dagflow.utils.session_manager import SessionManager
 from dagflow.step import StepStatus
 
 
@@ -20,8 +20,8 @@ def start_flow(dag_name, dag_run_id=None):
         "dag_name": dag_name,
         "dag_run_id": dag_run_id
     }
-    session_manager = SessionManager(dag_name, dag_run_id)
-    session_manager.set_session(data=session)
+    # session_manager = SessionManager(dag_name, dag_run_id)
+    # session_manager.set_session(data=session)
     steps_to_do = continue_flow(dag_name, dag_run_id)
     return dag_run_id, steps_to_do
 
@@ -66,8 +66,17 @@ def specify_step_to_run(dag_name, dag_run_id, step_name):
     for step_name in steps_to_do:
         step = dag.fetch_step_info(step_name)
         task_func = step["task_func"]
-        args = step["args"]
+        args = step.get("args", None)
         async_flag = step.get("async_flag", False)
+        if not args:
+            args = dict()
+        args.update({
+            "dag_name": dag_name,
+            "dag_run_id": dag_run_id,
+            "step_name": step_name,
+            "task_func": task_func,
+            "async_flag": async_flag,
+        })
         kwargs = {
             "dag_name": dag_name,
             "dag_run_id": dag_run_id,
