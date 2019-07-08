@@ -62,6 +62,9 @@ def on_message(channel, method_frame, header_frame, event_body):
         if operation == EventOperation.Finish_Step:
             step = Dag(dag_name).fetch_step_info(step_name)
             error_handle_step = step.get("error_handle_step", None)
+            last_step_flag = step.get("last_step_flag", False)
+            dag_run_status = dag_run_info.get("status", None)
+
             if step_status == StepStatus.Failed:
                 logger.error("Step {} of dag run <{}>:<{}> failed, downstream steps will not be triggered".format(
                     step_name, dag_name, dag_run_id
@@ -71,15 +74,32 @@ def on_message(channel, method_frame, header_frame, event_body):
                     return
                 else:
                     error_handle_flag = True
-            elif dag_run_info.get("status", None) == StepStatus.Failed:
+            elif dag_run_status == StepStatus.Failed:
                 logger.error("dag run <{}>:<{}> has failed, step {} {}, downstream steps will not be triggered".format(
                     dag_name, dag_run_id, step_name, step_status
                 ))
                 return
-            elif dag_run_info.get("status", None) == StepStatus.Stopped:
+            elif dag_run_status == StepStatus.Stopped:
                 logger.error("dag run <{}>:<{}> has been stopped, step {} {}, downstream steps will not be triggered".format(
                     dag_name, dag_run_id, step_name, step_status
                 ))
+                return
+            elif dag_run_status == StepStatus.Forbidden:
+                logger.error("dag run <{}>:<{}> has been forbidden, step {} {}, downstream steps will not be triggered".format(
+                    dag_name, dag_run_id, step_name, step_status
+                ))
+                return
+            elif dag_run_status == StepStatus.Succeeded:
+                logger.error("dag run <{}>:<{}> has been successful, step {} {}, downstream steps will not be triggered".format(
+                    dag_name, dag_run_id, step_name, step_status
+                ))
+                return
+
+            if step_status == StepStatus.Succeeded and last_step_flag is True:
+                logger.error("Last Step {} of dag run <{}>:<{}> succeeded, dag run succeeds!".format(
+                    step_name, dag_name, dag_run_id
+                ))
+                dag_repo.mark_dag_run_status(dag_name, dag_run_id, status=StepStatus.Succeeded)
                 return
         elif operation == EventOperation.Waiting_Event:
             logger.info("Step {} of dag run <{}>:<{}> finished, but is async, "
@@ -109,14 +129,17 @@ def on_message(channel, method_frame, header_frame, event_body):
                                         step_name=error_handle_step)
                     logger.info("Existent dag run <{}> of dag <{}>, run error handle step: {}".format(
                         dag_run_id, dag_name, step_name))
+            dag_repo.mark_dag_run_status(dag_name, dag_run_id, status=StepStatus.Running)
 
         elif status == RequestFilterStatus.DELAY:
             mq_broker.send_delayed_msg(event_body, delay_seconds=30)
             logger.warning("Request will be re-checked in 30s, {}".format(event_body))
+            dag_repo.mark_dag_run_status(dag_name, dag_run_id, status=StepStatus.ReScheduled)
         elif status == RequestFilterStatus.FORBID:
             logger.error("Request is rejected, \n"
                            "Request: {} \n"
                            "Error Info: {}".format(event_body, msg))
+            dag_repo.mark_dag_run_status(dag_name, dag_run_id, status=StepStatus.Forbidden)
     finally:
         channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 

@@ -12,7 +12,7 @@ class MongodbRepoTest(unittest.TestCase):
             "steps": [
                 {
                     "name": "step1",
-                    "task_func": "hello_plugin1",
+                    "task_func": "hello_plugin",
                     "args": {
                         "name": "hello world"
                     },
@@ -21,10 +21,11 @@ class MongodbRepoTest(unittest.TestCase):
                 },
                 {
                     "name": "step2",
-                    "task_func": "hello_plugin2",
+                    "task_func": "hello_plugin",
                     "args": {
                         "name": "hello world"
-                    }
+                    },
+                    "last_step_flag": True
                 },
             ]
         }

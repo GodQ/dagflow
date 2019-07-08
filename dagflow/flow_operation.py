@@ -14,12 +14,13 @@ dag_repo = get_DagRepo_Object()
 StepExecutor = get_StepExecutor_Class()
 
 
-def start_flow(dag_name, dag_run_id=None):
-    dag_run_id = dag_repo.add_dag_run(dag_name, dag_run_id)
-    session = {
-        "dag_name": dag_name,
-        "dag_run_id": dag_run_id
-    }
+def start_flow(dag_name, dag_run_id):
+    if dag_repo.find_dag_run(dag_name, dag_run_id) is None:
+        dag_run_id = dag_repo.add_dag_run(dag_name, dag_run_id)
+    # session = {
+    #     "dag_name": dag_name,
+    #     "dag_run_id": dag_run_id
+    # }
     # session_manager = SessionManager(dag_name, dag_run_id)
     # session_manager.set_session(data=session)
     steps_to_do = continue_flow(dag_name, dag_run_id)

@@ -30,7 +30,7 @@ class Manage:
     def register_dag(self, dag_def_path):
         dag = self.__load_dag_def_file(dag_def_path)
         dagflow_sdk.register_dag(dag)
-        print("Dag {} created successfully by path {}".format(dag['dag_name'], dag_def_path))
+        print("Dag {} created successfully by path {}".format(dag['name'], dag_def_path))
 
     def update_dag(self, dag_def_path):
         dag = self.__load_dag_def_file(dag_def_path)

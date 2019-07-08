@@ -1,7 +1,10 @@
+#!/usr/bin/env bash
+
+
+# pip install --upgrade twine
 rm -rf dist build dagflow.egg-info
 python setup.py sdist bdist
 rm dist/*.zip
-# pip install --upgrade twine
 twine upload dist/*
 
 # test

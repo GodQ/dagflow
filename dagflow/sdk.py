@@ -59,6 +59,11 @@ def start_worker(worker_count=None):
     # print("Dagflow worker has started successfully")
 
 
+def get_dag(dag_name):
+    assert dag_name
+    dag_repo.find_dag(dag_name)
+
+
 def run_dag(dag_name, dag_run_id=None):
     import time
     from dagflow.flow_operation import send_start_flow_msg
@@ -73,6 +78,11 @@ def stop_dag_run(dag_name, dag_run_id):
     assert dag_name and dag_run_id
     dag_repo.stop_dag_run(dag_name, dag_run_id)
     # print("Dag {} stopped successfully with dag_run_id {}".format(dag_name, dag_run_id))
+
+
+def get_dag_run(dag_name, dag_run_id):
+    assert dag_name and dag_run_id
+    dag_repo.find_dag_run(dag_name, dag_run_id)
 
 
 def list_dags(detail=False):

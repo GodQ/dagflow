@@ -12,7 +12,7 @@ class Config:
     # executor_class = "dagflow.executors.celery_executor.CeleryExecutor"
     executor_class = "dagflow.executors.sequential_executor.SequentialExecutor"
 
-    base_url = "10.241.0.146"
+    base_url = "10.241.1.128"
     celery_app_name = "dagflow"
     celery_configs = {
         "broker_url": "redis://@{}:6379/0".format(base_url),

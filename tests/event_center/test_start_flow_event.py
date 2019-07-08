@@ -19,7 +19,7 @@ class StartFlowEventTest(unittest.TestCase):
             "steps": [
                 {
                     "name": "step1",
-                    "task_func": "hello_plugin2",
+                    "task_func": "hello_plugin",
                     "args": {
                         "name": "hello world1"
                     },
@@ -28,7 +28,7 @@ class StartFlowEventTest(unittest.TestCase):
                 },
                 {
                     "name": "step2",
-                    "task_func": "hello_plugin2",
+                    "task_func": "hello_plugin",
                     "args": {
                         "name": "hello world2"
                     },
@@ -37,7 +37,7 @@ class StartFlowEventTest(unittest.TestCase):
                 },
                 {
                     "name": "step3",
-                    "task_func": "hello_plugin2",
+                    "task_func": "hello_plugin",
                     "args": {
                         "name": "hello world3"
                     },
@@ -46,16 +46,17 @@ class StartFlowEventTest(unittest.TestCase):
                 },
                 {
                     "name": "step4",
-                    "task_func": "hello_plugin2",
+                    "task_func": "hello_plugin",
                     "args": {
                         "name": "hello world4"
                     },
                     "upstreams": [],
-                    "downstreams": []
+                    "downstreams": [],
+                    "last_step_flag": True
                 },
                 {
                     "name": "step5",
-                    "task_func": "hello_plugin2",
+                    "task_func": "hello_plugin",
                     "args": {
                         "name": "hello world5"
                     },

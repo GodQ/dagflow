@@ -170,11 +170,21 @@ class MongodbDagRepo(BaseDagRepo):
                 "dag_name": dag_name,
                 "dag_run_id": dag_run_id
             }
+            res = db.dag_run.find(filter_dict)
+            for run in res:
+                dag_run_info = run
+                if "status" in dag_run_info and dag_run_info['status']:
+                    run_status = dag_run_info['status']
+                    if StepStatus.is_finished_status(run_status):
+                        print('The status of dag run {} in dag {} has been {}, skip set status to {}'.format(
+                            dag_run_id, dag_name, run_status, status))
+                        return False
             newvalues = {"$set": {"status": status}}
-            db.dag_run.update_one(
-                filter=filter_dict,
-                update=newvalues
+            db.dag_run.update(
+                filter_dict,
+                newvalues
             )
+            return True
 
     def add_dag_run_event(self, dag_name, dag_run_id, event):
         dag_run_id = str(dag_run_id)
