@@ -18,7 +18,7 @@ for i, pkg in enumerate(uninstalled_pkgs):
         del uninstalled_pkgs[i]
 
 setuptools.setup(name='dagflow',
-      version='0.0.12',
+      version='0.0.14',
       description='DAG Task Schedule Service',
       long_description='DAG Task Schedule Service',
       author='GodQ',

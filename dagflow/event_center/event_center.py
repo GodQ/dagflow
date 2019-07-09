@@ -90,13 +90,13 @@ def on_message(channel, method_frame, header_frame, event_body):
                 ))
                 return
             elif dag_run_status == StepStatus.Succeeded:
-                logger.error("dag run <{}>:<{}> has been successful, step {} {}, downstream steps will not be triggered".format(
+                logger.info("dag run <{}>:<{}> has been successful, step {} {}, downstream steps will not be triggered".format(
                     dag_name, dag_run_id, step_name, step_status
                 ))
                 return
 
             if step_status == StepStatus.Succeeded and last_step_flag is True:
-                logger.error("Last Step {} of dag run <{}>:<{}> succeeded, dag run succeeds!".format(
+                logger.info("Last Step {} of dag run <{}>:<{}> succeeded, dag run succeeds!".format(
                     step_name, dag_name, dag_run_id
                 ))
                 dag_repo.mark_dag_run_status(dag_name, dag_run_id, status=StepStatus.Succeeded)
