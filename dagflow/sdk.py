@@ -61,7 +61,7 @@ def start_worker(worker_count=None):
 
 def get_dag(dag_name):
     assert dag_name
-    dag_repo.find_dag(dag_name)
+    return dag_repo.find_dag(dag_name)
 
 
 def run_dag(dag_name, dag_run_id=None):
@@ -82,7 +82,7 @@ def stop_dag_run(dag_name, dag_run_id):
 
 def get_dag_run(dag_name, dag_run_id):
     assert dag_name and dag_run_id
-    dag_repo.find_dag_run(dag_name, dag_run_id)
+    return dag_repo.find_dag_run(dag_name, dag_run_id)
 
 
 def list_dags(detail=False):
