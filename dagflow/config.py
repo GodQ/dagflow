@@ -12,7 +12,7 @@ class Config:
     # executor_class = "dagflow.executors.celery_executor.CeleryExecutor"
     executor_class = "dagflow.executors.sequential_executor.SequentialExecutor"
 
-    base_url = "10.241.1.128"
+    base_url = "127.0.0.1"
     celery_app_name = "dagflow"
     celery_configs = {
         "broker_url": "redis://@{}:6379/0".format(base_url),
@@ -33,7 +33,7 @@ class Config:
         "db_name": "dagflow"}
 
     # Dagflow Broker Config
-    event_mq_url = "amqp://qau:qau-@@@-12345@mq1.dev.bkjk.cn:5672/qau"
+    event_mq_url = "amqp://godq:123456@127.0.0.1:5672/dagflow"
     event_mq_exchange = 'dagflow-broker-local'
     event_mq_queue = 'dagflow-broker-local'
     event_mq_delay_queue = 'dagflow-broker-delay-local'
