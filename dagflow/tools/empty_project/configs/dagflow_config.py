@@ -32,7 +32,7 @@ class Config:
         "db_name": "dagflow"}
 
     # Dagflow Broker Config
-    event_mq_url = "amqp://qau:qau-@@@-12345@mq1.dev.bkjk.cn:5672/qau"
+    event_mq_url = "amqp://godq:123456@127.0.0.1:5672/dagflow"
     event_mq_exchange = 'dagflow-broker-local'
     event_mq_queue = 'dagflow-broker-local'
     event_mq_delay_queue = 'dagflow-broker-delay-local'
